@@ -1,4 +1,4 @@
-# Pinger: A tool for measuring latency over time
+# Pinglong: A tool for measuring latency over a long(ish) time
 
 A simple tool for measuring latency within a network, oriented towards recording latency data necessary for BDC filings.
 
