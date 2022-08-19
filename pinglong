@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+
+import argparse
+
+from pinger import PingDB, Prober
+
+parser = argparse.ArgumentParser(description="Monitor latencies to a collection of IP addresses.")
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument('--add', action="append", nargs="+")
+group.add_argument('--reset', action="store_true")
+group.add_argument('--show', action="store_true")
+group.add_argument('--stats', action="store_true", help="Show stats, or save to the given file in CSV format.")
+
+parser.add_argument('--randomize', action="store_true", help="Randomize the order in which IPs are pinged to reduce risk of overloading network. Default: true.")
+parser.add_argument('--parallel', action="store", type=int, help="Number of pings to run in parallel, in seconds. Default: 10", default=10)
+parser.add_argument('--wait', action="store", type=int, help="Time to wait between pinging the same IP address again, in seconds. Default: 900s (15min).", default=15*60)
+parser.add_argument('--batch_wait', action="store", type=int, help="Time to wait between batches of pings, in seconds. Default: 5", default=5)
+parser.add_argument('--output', help="File path to write statistics (must be used with --stats)")
+
+args = parser.parse_args()
+
+if args.reset:
+    print("Removing all tracked IP addresses. Ping history is not affected.")
+    pdb = PingDB()
+    pdb.reset_ips()
+elif args.add:
+    print(args.add)
+    pdb = PingDB()
+    for item in args.add:
+        if len(item) > 2:
+            print("Ignoring %s, too many arguments for entry." % " ".join(item))
+            continue
+        elif len(item) == 2:
+            pdb.add_ips(item[0], item[1])
+        elif len(item) == 1:
+            pdb.add_ips(item[0], "")
+elif args.show:
+    print("Tracking the following IPs:")
+    pdb = PingDB()
+    for ip in pdb.get_tracked_ips():
+        print(str(ip))
+elif args.stats:
+    pdb = PingDB()
+    if args.output != None:
+        pdb.show_stats(outfile=args.output)
+    else:
+        pdb.show_stats()
+else:
+    prober = Prober(args.randomize, args.parallel, args.batch_wait, args.wait)
+    print("Running pings until you exit (CTRL+C).")
+    print("Pinging %d IP addresses in batches of %d every %d seconds." % (len(prober.ips), args.parallel, args.wait))
+    if not prober.feasible:
+        print("Warning: the probing speed is too low to probe that many IP addresses. Probe more IPs in parallel, decrease batch wait time, or increase wait time between subsequent pings of the same IP address.")
+    prober.runloop()
