@@ -2,7 +2,7 @@
 
 import argparse
 
-from pinger import PingDB, Prober
+from pinglong import PingDB, Prober
 
 parser = argparse.ArgumentParser(description="Monitor latencies to a collection of IP addresses.")
 
