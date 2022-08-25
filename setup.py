@@ -6,7 +6,7 @@ with open("README.md") as f:
 
 setup(
     name='pinglong',
-    version=0.1,
+    version=0.2,
     description='Pinglong: A tool for logging pings to end hosts for BDC',
     author='Shaddi Hasan',
     author_email="shaddi@vt.edu",

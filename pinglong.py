@@ -135,7 +135,7 @@ class Prober:
         - Minimum time between rounds of pings (default: 5s)
         - Wait time after pinging all addresses (default: 15min)
     """
-    def __init__(self, randomize, parallel, chunk_wait, round_wait, dbfile=None):
+    def __init__(self, randomize, parallel, chunk_wait, round_wait, verbose=False, dbfile=None):
         if not dbfile:
             self.dbfile=DEFAULT_DB
         else:
@@ -148,7 +148,7 @@ class Prober:
         self.num_parallel_pings = parallel # IPs at a time
         self.time_between_chunks = chunk_wait # seconds
         self.time_between_rounds = round_wait # seconds
-
+        self.verbose = verbose
 
     @property
     def feasible(self):
@@ -167,13 +167,19 @@ class Prober:
                 for i in range(0, len(ips_to_ping), self.num_parallel_pings):
                     chunk = ips_to_ping[i:i+self.num_parallel_pings]
                     now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    if self.verbose:
+                        print("Pinging: %s" % str([str(ipaddress.ip_address(ip)) for ip in chunk]))
                     hosts = icmplib.multiping([str(ipaddress.ip_address(ip)) for ip in chunk],
                                       count=1, timeout=1, privileged=False)
                     for host in hosts:
                         self.pdb.add_ping_record(now_utc,host.address,-1,host.max_rtt,host.is_alive)
+                    if self.verbose:
+                        print("Sleeping for %d seconds" % self.time_between_chunks)
                     time.sleep(self.time_between_chunks) # sleep time between chunks
 
-            # All IPs have been pinged, wait the time between rounds before trying again
-            time.sleep(self.time_between_rounds)
+                # All IPs have been pinged, wait the time between rounds before trying again
+                if self.verbose:
+                    print("Sleeping for %d seconds" % self.time_between_rounds)
+                time.sleep(self.time_between_rounds)
         except KeyboardInterrupt:
             pass

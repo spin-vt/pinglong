@@ -17,6 +17,7 @@ parser.add_argument('--parallel', action="store", type=int, help="Number of ping
 parser.add_argument('--wait', action="store", type=int, help="Time to wait between pinging the same IP address again, in seconds. Default: 900s (15min).", default=15*60)
 parser.add_argument('--batch_wait', action="store", type=int, help="Time to wait between batches of pings, in seconds. Default: 5", default=5)
 parser.add_argument('--output', help="File path to write statistics (must be used with --stats)")
+parser.add_argument('--verbose', "-v", action="store_true", help="Output more information when running.")
 
 args = parser.parse_args()
 
@@ -47,7 +48,7 @@ elif args.stats:
     else:
         pdb.show_stats()
 else:
-    prober = Prober(args.randomize, args.parallel, args.batch_wait, args.wait)
+    prober = Prober(randomize=args.randomize, parallel=args.parallel, chunk_wait=args.batch_wait, round_wait=args.wait, verbose=args.verbose)
     print("Running pings until you exit (CTRL+C).")
     print("Pinging %d IP addresses in batches of %d every %d seconds." % (len(prober.ips), args.parallel, args.wait))
     if not prober.feasible:
